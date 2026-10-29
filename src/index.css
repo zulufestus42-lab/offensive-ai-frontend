@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* ---- Theme tokens: black and white, one muted red for attacks ---- */
+.t-dark {
+  --bg: #0A0A0A; --panel: #0F0F0F; --line: #1C1C1C; --line2: #262626; --chip: #1A1A1A;
+  --fg: #F2F2F2; --fg2: #A3A3A3; --mute: #8F8F8F; --danger: #E5484D; --bar: #2E2E2E;
+  --blockbg: #2A1213; --blockline: #4A1D1F; --blockfg: #FFFFFF; --home: #FFFFFF; --glass: rgba(15,15,15,.88);
+  --sphere: #0B0B0B; --land: #3A3A3A; --land-hover: #4A4A4A; --border: #0B0B0B; --hot: #7A2A2D; --hot-hover: #8C3236;
+  --grid-minor: #161616; --grid-major: #1E1E1E; --grid-edge: #2A2A2A;
+  color-scheme: dark;
+}
+.t-light {
+  --bg: #F7F7F7; --panel: #FFFFFF; --line: #EAEAEA; --line2: #DDDDDD; --chip: #F2F2F2;
+  --fg: #0A0A0A; --fg2: #525252; --mute: #6B6B6B; --danger: #D92D20; --bar: #D4D4D4;
+  --blockbg: #0A0A0A; --blockline: #0A0A0A; --blockfg: #FFFFFF; --home: #0A0A0A; --glass: rgba(255,255,255,.92);
+  --sphere: #FFFFFF; --land: #C9C9C9; --land-hover: #B5B5B5; --border: #FFFFFF; --hot: #EBA8A1; --hot-hover: #E2918A;
+  --grid-minor: #F2F2F2; --grid-major: #EAEAEA; --grid-edge: #DDDDDD;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-chip: var(--chip);
+  --color-fg: var(--fg);
+  --color-fg2: var(--fg2);
+  --color-mute: var(--mute);
+  --color-danger: var(--danger);
+  --color-bar: var(--bar);
+  --color-home: var(--home);
+  --color-glass: var(--glass);
+  --font-sans: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); }
+a:hover { color: var(--fg2); }
+
+/* ---- Map ---- */
+.map-sphere { fill: var(--sphere); }
+.map-grid-minor { fill: none; stroke: var(--grid-minor); stroke-width: .5; }
+.map-grid-major { fill: none; stroke: var(--grid-major); stroke-width: .6; }
+.map-equator { fill: none; stroke: var(--grid-major); stroke-width: .8; }
+.map-outline { fill: none; stroke: var(--grid-edge); stroke-width: 1; }
+.map-land { fill: var(--land); stroke: var(--border); stroke-width: .6; stroke-linejoin: round; transition: fill .25s; }
+.map-land:hover { fill: var(--land-hover); }
+.map-land.hot { fill: var(--hot); stroke: var(--border); }
+.map-land.hot:hover { fill: var(--hot-hover); }
+.map-land.home { fill: var(--home); stroke: var(--border); }
+.map-home-label { fill: var(--fg); font-family: var(--font-mono); font-weight: 500; letter-spacing: .08em; paint-order: stroke; stroke: var(--sphere); stroke-width: 3px; pointer-events: none; }
+.mapzoom { transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+
+.pin { position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; padding: 0; border: 0; background: transparent; cursor: pointer; z-index: 3; }
+.pin .ring { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--danger); transform: translate(-50%,-50%); animation: pulse 2.4s ease-out infinite; }
+.pin .core { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); transform: translate(-50%,-50%); box-shadow: 0 0 0 2px var(--panel), 0 0 8px 1px var(--danger); }
+.pin.hot .ring { animation-duration: 1.1s; border-width: 2.5px; }
+
+/* Live attack ping — bright, expanding pulse fired the moment an attack lands */
+.ping { position: absolute; width: 0; height: 0; margin: 0; pointer-events: none; z-index: 6; }
+.ping-ring { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--danger); transform: translate(-50%,-50%) scale(.3); box-shadow: 0 0 14px 2px var(--danger); animation: ping-out 2.2s cubic-bezier(.2,.6,.3,1) forwards; }
+.ping-ring.two { animation-delay: .4s; }
+.ping-core { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: #FF5A5A; transform: translate(-50%,-50%); box-shadow: 0 0 18px 6px var(--danger); animation: ping-flash 2.2s ease-out forwards; }
+@keyframes ping-out { 0% { transform: translate(-50%,-50%) scale(.3); opacity: 1; } 100% { transform: translate(-50%,-50%) scale(6); opacity: 0; } }
+@keyframes ping-flash { 0% { opacity: 1; transform: translate(-50%,-50%) scale(1.4); } 55% { opacity: .85; } 100% { opacity: 0; transform: translate(-50%,-50%) scale(.6); } }
+@media (prefers-reduced-motion: reduce) { .ping-ring, .ping-core { animation-duration: .6s; } }
+.pin.sel .core { width: 10px; height: 10px; }
+.pin .tip { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); white-space: nowrap; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: var(--fg); color: var(--bg); opacity: 0; pointer-events: none; transition: opacity .15s; }
+.pin:hover .tip, .pin:focus-visible .tip { opacity: 1; }
+.pin:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 50%; }
+.home-pin { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--home); box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--home); }
+@keyframes pulse { 0% { transform: translate(-50%,-50%) scale(.5); opacity: .9; } 100% { transform: translate(-50%,-50%) scale(3.4); opacity: 0; } }
+
+.live { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); animation: blink 1.6s ease-in-out infinite; flex: none; }
+.live.off { animation: none; background: var(--mute); }
+@keyframes blink { 50% { opacity: .25; } }
+
+/* ---- Controls ---- */
+.ctl { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line2); background: var(--panel); color: var(--fg); border-radius: 6px; cursor: pointer; padding: 0; }
+.ctl:hover { background: var(--chip); }
+.orow { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; width: 100%; min-height: 44px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--fg); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.orow:hover, .orow.sel { background: var(--chip); }
+
+/* ---- Charts ---- */
+.bar { flex: 1; background: var(--bar); border-radius: 2px 2px 0 0; min-width: 4px; transition: height .5s ease; }
+.bar.peak { background: var(--danger); }
+
+/* ---- Log table ---- */
+.pill { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; }
+.pill.block { color: var(--blockfg); background: var(--blockbg); border: 1px solid var(--blockline); }
+.pill.allow, .pill.review { color: var(--fg2); background: transparent; border: 1px solid var(--line2); }
+.logrow { display: grid; grid-template-columns: 92px 140px 130px 170px minmax(140px,1fr) 96px 80px; gap: 16px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); font-size: 13px; }
+.logrow.new { animation: fade .9s ease-out; }
+@keyframes fade { from { background: var(--chip); } to { background: transparent; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pin .ring, .live, .logrow.new { animation: none; }
+  .mapzoom, .bar { transition: none; }
+}
+
+/* ---- Red Team AI report (rendered markdown) ---- */
+.rt-report h1, .rt-report h2, .rt-report h3, .rt-report h4 { color: var(--fg); font-weight: 600; line-height: 1.3; margin: 1.3em 0 .5em; }
+.rt-report h1 { font-size: 20px; } .rt-report h2 { font-size: 17px; } .rt-report h3 { font-size: 15px; } .rt-report h4 { font-size: 14px; }
+.rt-report > :first-child { margin-top: 0; }
+.rt-report p { margin: 0 0 .9em; }
+.rt-report ul { margin: 0 0 .9em; padding-left: 1.2em; }
+.rt-report li { margin: .2em 0; }
+.rt-report code { font-family: var(--font-mono); font-size: .88em; background: var(--chip); border: 1px solid var(--line); border-radius: 4px; padding: .05em .35em; }
+.rt-report pre { background: var(--chip); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; margin: 0 0 1em; }
+.rt-report pre code { background: none; border: 0; padding: 0; font-size: 12.5px; line-height: 1.55; color: var(--fg); }
+.rt-report strong { color: var(--fg); font-weight: 600; }
